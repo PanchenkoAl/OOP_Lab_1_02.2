@@ -14,6 +14,7 @@ namespace OOP_Lab1_v._02
     {
         public List<string> startTracer = new List<string>();
         public List<string> endTracer = new List<string>();
+        public Lexer InstanceOfLexer = new Lexer();
 
         public bool cycle()
         {
@@ -52,21 +53,33 @@ namespace OOP_Lab1_v._02
 
         public string ParseExpression(string exp, Cell[,] table, int row, int col)
         {
-            if(exp == null || exp.Length == 0)
-            {
-                MessageBox.Show("#ERROR_PE_EXPRESSION_IS_NULL");
-                return "0";
-            }
-            exp = exp.Replace(" ", "");
             if (exp == null || exp.Length == 0)
             {
                 MessageBox.Show("#ERROR_PE_EXPRESSION_IS_NULL");
-                return "0";
+                return "#ERROR";
+            }
+            exp = exp.Replace(" ", "");
+            for (int i = 0; i < exp.Length; i ++)
+            {
+                if ("+-/*^ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890()".IndexOf(exp[i]) != -1)
+                {
+
+                }
+                else
+                {
+                    MessageBox.Show("#ERROR_SYNTAX");
+                    return "#ERROR";
+                }
+            }
+            if (exp == null || exp.Length == 0)
+            {
+                MessageBox.Show("#ERROR_PE_EXPRESSION_IS_NULL");
+                return "#ERROR";
             }
             if(!cycle())
             {
                 MessageBox.Show("#ERROR_CYCLE");
-                return "0";
+                return "#CYCLE";
             }
             if (exp[0] != '(' || exp[exp.Length - 1] != ')')
             {
@@ -76,27 +89,66 @@ namespace OOP_Lab1_v._02
                 exp += temp;
                 exp += ")";
             }
-            
-                
 
+
+            //exp = FindMinuses(exp, table, row, col);
             exp = FindIncDec(exp);
-            //MessageBox.Show(exp);
             exp = SetBrackets(exp, table);
             exp = exp.Replace(" ", "");
-            //MessageBox.Show("SB " + exp);
             exp = EvaluateBrackets(exp, table, row, col);
             return exp;
         }
 
-        public bool IsNumber(char c)
+        public string FindMinuses(string exp, Cell[,] table, int row, int col)
         {
-            if ("1234567890".IndexOf(c) != -1)
-                return true;
-            else
-                return false;
-        }
+            for(int i = 1; i < exp.Length; i ++)
+            {
+                if (exp[i] == '-' && exp[i-1] == '(')
+                {
+                    int k = i + 1;
+                    string subExp = null;
+                    string left = null;
+                    string right = null;
+                    for (int g = 0; g < i; g++)
+                        left += exp[g];
+                    while (exp[k] != ')')
+                    {
+                        subExp += exp[k];
+                        k++;
+                    }
+                    for (int g = k; g < exp.Length; g++)
+                        right += exp[g];
 
-        public Lexer InstanceOfLexer = new Lexer();
+                    string result = ParseExpression(subExp, table, row, col);
+                    double res = Double.Parse(result);
+                    res = -res;
+                    int addC = 0, addR = 0;
+                    for(int ii = 100; ii < 200; ii++)
+                    {
+                        for(int jj = 100; jj < 200; jj ++)
+                        {
+                            if(table[jj, ii].cValue == null)
+                            {
+                                addC = ii;
+                                addR = jj;
+                                table[jj, ii].cValue = subExp.Insert(0, "-");
+                                table[jj, ii].cValue_s = res;
+                            }
+                        }
+                    }
+                    string ins = null;
+                    int mod = addC / 26 - 1;
+                    int ost = addC % 26;
+                    ins += (char)(mod + 65);
+                    if(ost != 0 && mod > 1)
+                        ins += (char)(ost + 64);
+                    ins += addR.ToString();
+                    string end = null;
+                    end += left += ins += right;
+                }
+            }
+            return exp;
+        }
 
         public string FindIncDec(string exp)
         {
@@ -104,22 +156,18 @@ namespace OOP_Lab1_v._02
             {
                 if(exp[i] == 'i' && exp[i+1] == 'n' && exp[i + 2] == 'c' && exp[i + 3] == '(')
                 {
-                    //MessageBox.Show("inc " + i);
                     string t1 = null;
                     string t2 = null;
                     for (int k = 0; k < i; k++)
                         t1 += exp[k];
-                    //MessageBox.Show("t1 " + t1);
                     int g = i + 4;
                     while (exp[g] != ')')
                         g++;
                     for (int k = g + 1; k < exp.Length; k++)
                         t2 += exp[k];
-                    //MessageBox.Show("t2 " + t2);
                     string ss = null;
                     for (int k = i + 4; k < g; k++)
                         ss += exp[k];
-                    //MessageBox.Show("ss " + ss);
                     string res = null;
                     res += t1;
                     res += "(";
@@ -198,60 +246,6 @@ namespace OOP_Lab1_v._02
             {
                 if (exp[i] == '*' || exp[i] == '/')
                 {
-                    //MessageBox.Show("*");
-                    for (int k = i + 1; k < exp.Length; k++)
-                    {
-                        int cb = 0;
-                        if (exp[k] == '(')
-                        {
-                            cb++;
-                            while (exp[k] != ')' && k < exp.Length || cb != 0)
-                            {
-                                k++;
-                                if (exp[k] == '(')
-                                    cb++;
-                                if (exp[k] == ')')
-                                    cb--;
-                            }
-                        }
-                        if (InstanceOfLexer.IsDelim(exp[k]) || exp[k] == ')')
-                        {
-                            exp = exp.Insert(k, ")"); //MessageBox.Show(exp);
-                            break;
-                        }
-                    }
-                    for (int k = i - 1; k > 0; k--)
-                    {
-                        int cb = 0;
-                        if (exp[k] == ')')
-                        {
-                            cb++;
-                            while (exp[k] != '(' && k > 0 || cb != 0)
-                            {
-                                k--;
-                                if (exp[k] == ')')
-                                    cb++;
-                                if (exp[k] == '(')
-                                    cb--;
-                            }
-                        }
-                        //MessageBox.Show(k.ToString() + " " + exp[k] + " " + InstanceOfLexer.IsDelim(exp[k]).ToString());
-                        if (InstanceOfLexer.IsDelim(exp[k]) || exp[k] == '(')
-                        {
-                            //MessageBox.Show((k).ToString() + " " + exp);
-                            exp = exp.Insert(k + 1, "(");
-                            //MessageBox.Show((k).ToString() + " " + exp);
-                            i++;
-                            break;
-                        }
-                    }
-                }
-            }
-            for (int i = 0; i < exp.Length; i++)
-            {
-                if (exp[i] == '+' || exp[i] == '-')
-                {
-                    //MessageBox.Show("+");
                     for (int k = i + 1; k < exp.Length; k++)
                     {
                         int cb = 0;
@@ -288,19 +282,64 @@ namespace OOP_Lab1_v._02
                                     cb--;
                             }
                         }
-                        //MessageBox.Show(k.ToString() + " " + exp + " " + InstanceOfLexer.IsDelim(exp[k]).ToString());
                         if (InstanceOfLexer.IsDelim(exp[k]) || exp[k] == '(')
                         {
-                            //MessageBox.Show((k).ToString() + " " + exp);
                             exp = exp.Insert(k + 1, "(");
-                           // MessageBox.Show((k).ToString() + " " + exp);
                             i++;
                             break;
                         }
                     }
                 }
             }
-            //MessageBox.Show(exp + " ret");
+            for (int i = 0; i < exp.Length; i++)
+            {
+                if (exp[i] == '+' || exp[i] == '-')
+                {
+                    for (int k = i + 1; k < exp.Length; k++)
+                    {
+                        int cb = 0;
+                        if (exp[k] == '(')
+                        {
+                            cb++;
+                            while (exp[k] != ')' && k < exp.Length || cb != 0)
+                            {
+                                k++;
+                                if (exp[k] == '(')
+                                    cb++;
+                                if (exp[k] == ')')
+                                    cb--;
+                            }
+                        }
+                        if (InstanceOfLexer.IsDelim(exp[k]) || exp[k] == ')')
+                        {
+                            exp = exp.Insert(k, ")");
+                            break;
+                        }
+                    }
+                    for (int k = i - 1; k >= 0; k--)
+                    {
+                        int cb = 0;
+                        if (exp[k] == ')')
+                        {
+                            cb++;
+                            while (exp[k] != '(' && k > 0 || cb != 0)
+                            {
+                                k--;
+                                if (exp[k] == ')')
+                                    cb++;
+                                if (exp[k] == '(')
+                                    cb--;
+                            }
+                        }
+                        if (InstanceOfLexer.IsDelim(exp[k]) || exp[k] == '(')
+                        {
+                            exp = exp.Insert(k + 1, "(");
+                            i++;
+                            break;
+                        }
+                    }
+                }
+            }
             
             return exp;
         }
@@ -314,8 +353,6 @@ namespace OOP_Lab1_v._02
             }
             int openBracketIdx = 0;
             int closeBracketIdx = 0;
-            //MessageBox.Show("Evaluating brackets started");
-            //MessageBox.Show(exp);
             for(int i = exp.Length - 1; i >= 0; i--)
             {
                 if (exp[i] == '(')
@@ -325,7 +362,6 @@ namespace OOP_Lab1_v._02
                     while (exp[i] != ')')
                         i++;
                     closeBracketIdx = i;
-                    //MessageBox.Show("Close Bracket Idx = " + closeBracketIdx);
                     string inBracketExpression = null;
                     for(int k = openBracketIdx + 1; k < closeBracketIdx; k++)
                         inBracketExpression += exp[k];
@@ -336,13 +372,11 @@ namespace OOP_Lab1_v._02
                     for(int k = closeBracketIdx + 1; k < exp.Length; k++)
                         rightExpression += exp[k];
                     string tempResult = null;
-                    tempResult += EvaluateExpression(inBracketExpression, table, row, col);
-                    //MessageBox.Show("Temp Result = " + tempResult);
+                    tempResult += EvaluateExpression1(inBracketExpression, table, row, col);
                     string result = null;
                     result += leftExpression;
                     result += tempResult;
                     result += rightExpression;
-                    //MessageBox.Show("End Result = " + result);
                     exp = result;
                     i = openBracketIdx;
                 }
@@ -350,71 +384,75 @@ namespace OOP_Lab1_v._02
             return exp;
         }
 
-        public string EvaluateExpression(string exp, Cell[,] table, int row, int col)
+        public string EvaluateExpression1 (string exp, Cell[,] table, int row, int col)
         {
-            int idm;
             if (exp == null)
             {
                 MessageBox.Show("#ERROREE");
                 return "0";
             }
-            string op1 = null;
-            string op2 = null;
-            double res1 = 0, res2;
-            char delim = '0';
-            bool flag = false;
+            string left = null, right = null;
+            double left_d = 0, right_d = 0;
+            for(int i = 0; i < exp.Length; i++)
+            {
+                if (InstanceOfLexer.IsDelim(exp[i]) && i != 0)
+                {
+                    for(int k = 0; k < i; k ++)
+                        left += exp[k];
+                    for (int k = i + 1; k < exp.Length; k++)
+                        right += exp[k];
+                    
+                    if (InstanceOfLexer.IsLetter(left[0]))
+                        left_d = FindCell(left, table, row, col);
+                    else if (InstanceOfLexer.IsNumber(left[0]))
+                        left_d = Double.Parse(left);
+                    else if (left[0] == '-')
+                    {
+                        if (InstanceOfLexer.IsLetter(left[1]))
+                        {
+                            string temp = null;
+                            for (int o = 1; o < left.Length; o++)
+                                temp += left[o];
+                            left = temp;
+                            left_d = FindCell(left, table, row, col);
+                            left_d = -left_d;
+                        }
+                        else if (InstanceOfLexer.IsNumber(left[1]))
+                            left_d = Double.Parse(left);
+                    }
 
-            for(int i = 0; i < exp.Length; i ++)
-            {          
-                int rb = exp.Length, lb = - 1;
-                int delimIdx = FindDelim(exp);
-                delim = exp[delimIdx];
-                int cou = 0;
-                for(int oo = 0; oo < exp.Length; oo ++)
-                {
-                    if (InstanceOfLexer.IsDelim(exp[oo]))
-                    {
-                        cou++;
-                    }
+
+                    if (InstanceOfLexer.IsLetter(right[0]))
+                        right_d = FindCell(right, table, row, col);
+                    else
+                        if (InstanceOfLexer.IsNumber(right[0]))
+                        right_d = Double.Parse(right);
+                    double result = CalculateResult(left_d, right_d, exp[i]);
+                    
+                    return result.ToString();
                 }
-                if(cou == 0)
-                {
-                    flag = true;
-                }
-                for(int k = delimIdx + 1; k < exp.Length; k ++)
-                {
-                    if (InstanceOfLexer.IsDelim(exp[k]))
-                    {
-                        rb = k;
-                    }
-                }
-                for (int k = delimIdx - 1; k > 0; k--)
-                {
-                    if (InstanceOfLexer.IsDelim(exp[k]))
-                    {
-                        lb = k;
-                    }
-                }
-                for(int k = lb + 1; k < delimIdx; k ++)
-                {
-                    op1 += exp[k];
-                }
-                for (int k = delimIdx + 1; k < rb; k++)
-                {
-                    op2 += exp[k];
-                }
-                if(flag)
-                {
-                    op1 = exp;
-                    res1 = FindCell(op1, table, row, col);
-                    return res1.ToString();
-                }
-                res1 = FindCell(op1, table, row, col);
-                res2 = FindCell(op2, table, row, col);
-                res1 = CalculateResult(res1, res2, delim);
-                return res1.ToString();
             }
-            return res1.ToString();
+            string op = exp;
+            double op_d = 0;
+            if (InstanceOfLexer.IsLetter(op[0]))
+                op_d = FindCell(op, table, row, col);
+            else if (InstanceOfLexer.IsNumber(op[0]))
+                op_d = Double.Parse(op);
+            else if (op[0] == '-')
+            {
+                if (InstanceOfLexer.IsLetter(op[1]))
+                {
+                    string temp = null;
+                    for (int o = 1; o < op.Length; o++)
+                        temp += op[o];
+                    op = temp;
+                    op_d = FindCell(op, table, row, col);
+                    op_d = -op_d;
+                }
+                else if (InstanceOfLexer.IsNumber(op[1]))
+                    op_d = Double.Parse(op);
+            }
+            return op_d.ToString();
         }
 
         public int FindDelim (string exp)
@@ -456,7 +494,7 @@ namespace OOP_Lab1_v._02
             if (exp == null)
                 MessageBox.Show("exp is null");
             if (exp != null)
-                if (IsNumber(exp[0]))
+                if (InstanceOfLexer.IsNumber(exp[0]))
                 {
                     oper1 = Double.Parse(exp);
                     return oper1;
@@ -476,7 +514,6 @@ namespace OOP_Lab1_v._02
                         itt++;
                     }
                     int c1 = 0, c2 = 0;
-                    //MessageBox.Show("AddressC = " + addressC + " | " + addressC.Length.ToString());
                     if(addressC != null)
                     for (int k = 0; k < addressC.Length; k++)
                     {
@@ -493,8 +530,6 @@ namespace OOP_Lab1_v._02
                             else
                                 c2 += ((int)addressR[k] - 48);
                     }
-                    //MessageBox.Show("c1 = " + c1.ToString() + " c2 = " + c2.ToString());
-                    //MessageBox.Show("table cv = " + table[c2, c1].cValue);
                     if(c1 < 100 && c2 < 100)
                     {
                         string st = null;
@@ -508,8 +543,18 @@ namespace OOP_Lab1_v._02
                         startTracer.Add(st);
                         endTracer.Add(et);
                         string buffer = ParseExpression(table[c2, c1].cValue, table, c2, c1);
-                        oper1 = Double.Parse(buffer);
-                        return oper1;
+                        try
+                        {
+                            oper1 = Double.Parse(buffer);
+                            table[c2, c1].cValue_s = oper1;
+                            return oper1;
+                        }
+                        catch (System.FormatException)
+                        {
+                            return 0.0;
+                        }
+                        
+
                     }
                     else
                     {

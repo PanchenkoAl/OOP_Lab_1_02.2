@@ -5,7 +5,7 @@ namespace OOP_Lab1_v._02
     public partial class Form1 : Form
     {
 
-        const int border = 100;
+        const int border = 200;
         public Cell[,] table = new Cell[border,border];
         public int _COLUMNS = 0;
         public int _ROWS = 0;
@@ -55,10 +55,12 @@ namespace OOP_Lab1_v._02
         {
             
             table[row, col].cValue = exp;
-            //MessageBox.Show("row = " + row.ToString() + " col = " + col.ToString() + " table cv = " + table[row, col].cValue);
+
             Parser parser = new Parser();
             string rr;
             rr = parser.ParseExpression(exp, table, row, col);
+            
+
             dataGridView1[col, row].Value = rr;
             UpdateCells();
         }
@@ -290,7 +292,7 @@ namespace OOP_Lab1_v._02
 
         private void button9_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Лабораторна робота 1. Автор - студент 2го курсу, групи К-25 Панченко Олександр Вадимович." + '\n' + "Для введення адреси клітинок використовуйте літери верхнього регістру та цифри." + '\n' + "Підтримуються операції множення, ділення, суми, різниці, інкременту, декременту (*, /, +, -, inc(), dec())");
+            MessageBox.Show("Лабораторна робота 1. Автор - студент 2го курсу, групи К-25 Панченко Олександр Вадимович." + '\n' + "Для введення адреси клітинок використовуйте літери верхнього регістру та цифри." + '\n' + "Підтримуються операції степеня, множення, ділення, суми, різниці, інкременту, декременту, унарного мінусу (^, *, /, +, -, inc(), dec()), -(Xn)");
         }
     }
 }
