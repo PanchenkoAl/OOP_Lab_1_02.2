@@ -215,27 +215,43 @@ namespace OOP_Lab1_v._02
                 {
                     for (int k = i + 1; k < exp.Length; k++)
                     {
+                        int cb = 0;
                         if (exp[k] == '(')
                         {
-                            while (exp[k] != ')' && k < exp.Length)
+                            cb++;
+                            while (exp[k] != ')' && k < exp.Length || cb != 0)
+                            {
                                 k++;
+                                if (exp[k] == '(')
+                                    cb++;
+                                if (exp[k] == ')')
+                                    cb--;
+                            }
                         }
-                        if (InstanceOfLexer.IsDelim(exp[k]) || k == exp.Length - 1)
+                        if (InstanceOfLexer.IsDelim(exp[k]) || exp[k] == ')')
                         {
                             exp = exp.Insert(k, ")");
                             break;
                         }
                     }
-                    for (int k = i - 1; k > 0; k--)
+                    for (int k = i - 1; k >= 0; k--)
                     {
+                        int cb = 0;
                         if (exp[k] == ')')
                         {
-                            while (exp[k] != '(' && k > 0)
+                            cb++;
+                            while (exp[k] != '(' && k > 0 || cb != 0)
+                            {
                                 k--;
+                                if (exp[k] == ')')
+                                    cb++;
+                                if (exp[k] == '(')
+                                    cb--;
+                            }
                         }
-                        if (InstanceOfLexer.IsDelim(exp[k]) || k == 1)
+                        if (InstanceOfLexer.IsDelim(exp[k]) || exp[k] == '(')
                         {
-                            exp = exp.Insert(k - 1, "(");
+                            exp = exp.Insert(k + 1, "(");
                             i++;
                             break;
                         }
